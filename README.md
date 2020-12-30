@@ -1,8 +1,8 @@
 # donut-backend
 
- donut-backend/
-   ===> index.js ## This is the entry point of the project
-   ===> example.env ## This is a copy of .env file fields
+#  root/
+     ===> index.js ## This is the entry point of the project
+     ===> example.env ## This is a copy of .env file fields
     
 #    routes/
        ===> index.js ## All the end points are in this file
