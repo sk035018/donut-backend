@@ -1,5 +1,4 @@
-const { posts, users } = require("../models");
-const { comments } = require("../models");
+const { posts, users, comments, transaction } = require("../models");
 const { deleteFile } = require("../utils");
 
 module.exports = {
@@ -24,7 +23,6 @@ module.exports = {
   destroyPostService: async (userId, id) => {
     try {
       const post = await posts.findOne({ where: { id } });
-      const allComments = await comments.findAll({ where: { postId: id } });
 
       if (!post) {
         throw new Error("No Such Post Found !!!");
@@ -38,12 +36,10 @@ module.exports = {
         await deleteFile(post.media);
       }
 
-      allComments.forEach((comment) => {
-        comment.destroy().catch((err) => {
-          throw err;
-        });
-      });
-      await post.destroy();
+      await transaction(async (transaction) => {
+        await comments.destroy({ where: { postId: id } }, { transaction });
+        await post.destroy({ transaction });
+      })
 
       return {
         statusCode: 201,
@@ -79,7 +75,7 @@ module.exports = {
     try {
       const myPosts = await posts.findAll({ where: { userId } });
       return {
-        message: "user's posts displayed",
+        message: "Posts Displayed !!!",
         statusCode: 200,
         name: "posts",
         value: myPosts,

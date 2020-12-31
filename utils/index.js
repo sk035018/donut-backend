@@ -40,7 +40,7 @@ const sendSuccessResponse = ({ res, data = {}, message, statusCode, count }) => 
     data.message = message;
   }
 
-  return res.status(statusCode).json(data);
+  return res.status(statusCode).send(data);
 };
 
 const sendFailureResponse = ({ res, message, statusCode, errors = [] }) => {

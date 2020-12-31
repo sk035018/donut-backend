@@ -1,9 +1,8 @@
 const { Sequelize } = require("sequelize");
 const { fs } = require("../utils");
-const path = require("path");
 
 const db = {};
-const basename = path.basename(__filename);
+
 const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
 
 const sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
@@ -36,8 +35,13 @@ db.comments = require('./comments')(sequelize, Sequelize.DataTypes);
   }
 })();
 
+// Providing Associations to models
 db.posts.belongsTo(db.users, { foreignKey: 'userId' });
 
 db.sequelize = sequelize;
+
+db.transaction = (cb) => {
+  return sequelize.transaction(cb);
+}
 
 module.exports = db;
