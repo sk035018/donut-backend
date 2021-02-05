@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const passwords = require("random-passwords-generator");
 const mailer = require("nodemailer");
-const fs = require('fs');
-const promisify = require('util').promisify;
+const fs = require("fs");
+const promisify = require("util").promisify;
 
 passwordOptions = {
   LENGTH: 6,
@@ -31,48 +31,43 @@ const transporter = mailer.createTransport({
   },
 });
 
-const sendSuccessResponse = ({ res, data = {}, message, statusCode, count }) => {
-  if (count) {
-    data.count = count;
-  }
-
+const sendSuccessResponse = ({ res, data = {}, message, statusCode }) => {
   if (message) {
     data.message = message;
   }
 
-  return res.status(statusCode).send(data);
+  return res.status(statusCode).json(data);
 };
 
-const sendFailureResponse = ({ res, message, statusCode, errors = [] }) => {
+const sendFailureResponse = ({
+  res,
+  message,
+  statusCode = 500,
+  errors = [],
+}) => {
   const response = {
-    errors: errors.length ? errors : message,
+    errors: errors.length ? errors : [message],
   };
 
   return res.status(statusCode).json(response);
 };
 
 module.exports = {
-  response: ({ message, statusCode, errors, name, value, res, count }) => {
-    if (statusCode >= 400)
+  response: ({ message, statusCode, errors, name, value, res }) => {
+    if (100 <= statusCode >= 400) {
       sendFailureResponse({ res, message, statusCode, errors });
-    else {
+    } else {
       sendSuccessResponse({
         res,
         data: { [name]: value },
         message,
         statusCode,
-        count,
       });
     }
   },
 
-  sanitizedUser: (user) => {
-    const { password, ...rest } = JSON.parse(JSON.stringify(user));
-    return rest;
-  },
-
-  generateJwt: (payload) => {
-    return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: "1d" });
+  generateJwt: (payload, expiresIn = "1d") => {
+    return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn });
   },
 
   generatePassword: () => {
@@ -87,13 +82,23 @@ module.exports = {
 
     try {
       const info = await transporter.sendMail(mailOptions);
-      console.log('Mail Sent : ', info.response);
-    } catch(error) {
-      throw error;
+      console.log("Mail Sent : ", info.response);
+    } catch (err) {
+      throw err;
     }
   },
 
-  fs,
-  deleteFile : promisify(fs.unlink),
+  toPascalCase: (string) => {
+    return string
+      .trim()
+      .split(" ")
+      .map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+      .join(" ");
+  },
+
+  stringifyMe: (obj) => JSON.parse(JSON.stringify(obj)),
+
+  jwt,
+  deleteFile: promisify(fs.unlink),
   sendFailureResponse,
 };

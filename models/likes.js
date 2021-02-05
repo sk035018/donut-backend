@@ -1,26 +1,29 @@
 module.exports = function (sequelize, DataTypes) {
-    const likes = sequelize.define(
-      "likes",
-      {
-        postId: {
-          allowNull: false,
-          type: DataTypes.INTEGER,
-        },
-        userId: {
-          allowNull: false,
-          type: DataTypes.INTEGER,
-        },
+  return sequelize.define(
+    "likes",
+    {
+      userId: {
+        allowNull: false,
+        type: DataTypes.INTEGER,
       },
-      {
-        timestamps: true,
-        createdAt: "created_at",
-        updatedAt: "updated_at",
-        deletedAt: false,
-        underscored: true,
-        freezeTableName: true,
-      }
-    );
-  
-    return likes;
-  };
-  
+
+      likeType: {
+        type: DataTypes.ENUM("POST", "COMMENT"),
+        allowNull: false,
+      },
+
+      typeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+    },
+
+    {
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: false,
+      deletedAt: false,
+      underscored: true,
+    }
+  );
+};

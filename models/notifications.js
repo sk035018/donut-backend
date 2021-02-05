@@ -1,32 +1,28 @@
-module.exports = function (sequelize, DataTypes) {
+module.exports = (sequelize, DataTypes) => {
   return sequelize.define(
-    "posts",
+    "notifications",
     {
-      userId: {
+      from: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-
-      text: DataTypes.STRING,
-
-      media: DataTypes.STRING,
-
-      totalLikes: {
-        defaultValue: 0,
+      to: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       },
-
-      totalComments: {
-        defaultValue: 0,
+      type: {
+        type: DataTypes.ENUM("LIKEPOST", "LIKECOMMENT", "COMMENT", "SHARE"),
+        allowNull: false,
+      },
+      postId: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       },
-
-      isShared: {
-        defaultValue: false,
+      delivered: {
+        defaultValue: true,
         type: DataTypes.BOOLEAN,
       },
     },
-
     {
       timestamps: true,
       createdAt: "created_at",

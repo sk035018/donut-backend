@@ -1,27 +1,18 @@
 module.exports = function (sequelize, DataTypes) {
   return sequelize.define(
-    "posts",
+    "friends",
     {
-      userId: {
-        type: DataTypes.INTEGER,
+      user1: {
         allowNull: false,
-      },
-
-      text: DataTypes.STRING,
-
-      media: DataTypes.STRING,
-
-      totalLikes: {
-        defaultValue: 0,
         type: DataTypes.INTEGER,
       },
 
-      totalComments: {
-        defaultValue: 0,
+      user2: {
+        allowNull: false,
         type: DataTypes.INTEGER,
       },
 
-      isShared: {
+      accepted: {
         defaultValue: false,
         type: DataTypes.BOOLEAN,
       },
@@ -30,7 +21,7 @@ module.exports = function (sequelize, DataTypes) {
     {
       timestamps: true,
       createdAt: "created_at",
-      updatedAt: false,
+      updatedAt: "updated_at",
       deletedAt: false,
       underscored: true,
     }

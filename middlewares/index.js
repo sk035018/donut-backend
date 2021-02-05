@@ -5,8 +5,8 @@ const _cors = require("cors");
 const _logger = require("morgan");
 const bodyParser = require("body-parser");
 
-const { users } = require("../models");
-const { sanitizedUser } = require("../utils");
+const { Users } = require("../models");
+const { toPascalCase, stringifyMe } = require("../utils");
 
 const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -21,24 +21,37 @@ const corsOptions = {
 _passport.use(
   new JwtStrategy(jwtOptions, async (payload, done) => {
     try {
-      const user = await users.findOne({ where: { email: payload.email } });
+      const user = await Users.findOne({
+        where: { email: payload.email },
+        attributes: { exclude: ["password"] },
+      });
 
       if (!user) {
         done(null, false);
       }
 
-      done(null, sanitizedUser(user));
+      done(null, stringifyMe(user));
     } catch (err) {
       console.error(err);
     }
   })
 );
 
+const trimFields = (req, _, next) => {
+  req.body.fullName && (req.body.fullName = toPascalCase(req.body.fullName));
+  req.body.userName && (req.body.userName = req.body.userName.trim());
+  req.body.bio && (req.body.bio = req.body.bio.trim());
+  req.body.email && (req.body.email = req.body.email.toLowerCase());
+  !req.body.dob && (req.body.dob = null);
+  next();
+};
+
 module.exports = {
   passport: _passport.initialize(),
   cors: _cors(corsOptions),
-  authenticate: _passport.authenticate(["jwt",], { session: false, }),
+  authenticate: _passport.authenticate("jwt", { session: false }),
   json: bodyParser.json(),
-  urlencoded: bodyParser.urlencoded({ extended: false }),
+  urlencoded: bodyParser.urlencoded({ extended: true }),
   logger: _logger("dev"),
+  trimFields,
 };

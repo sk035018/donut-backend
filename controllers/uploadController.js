@@ -1,13 +1,11 @@
 const multer = require("multer");
 const path = require("path");
 const { imageFilter, mediaFilter } = require("../validator");
-const { fs, sendFailureResponse } = require("../utils");
+const { sendFailureResponse } = require("../utils");
 
 const profilePicStorage = multer.diskStorage({
   destination: (_, __, cb) => {
-    const _path = "./uploads/profile";
-    fs.mkdirSync(_path, { recursive: true });
-    cb(null, _path);
+    cb(null, process.env.DP_FILE_PATH);
   },
 
   filename: (req, file, cb) => {
@@ -17,9 +15,7 @@ const profilePicStorage = multer.diskStorage({
 
 const postStorage = multer.diskStorage({
   destination: (_, __, cb) => {
-    const _path = "./uploads/posts";
-    fs.mkdirSync(_path, { recursive: true });
-    cb(null, _path);
+    cb(null, process.env.POSTS_FILE_PATH);
   },
 
   filename: (req, file, cb) => {
@@ -40,16 +36,13 @@ module.exports = {
     }).single("profilePic");
     upload(req, res, (err) => {
       if (err) {
-        console.error(err);
         sendFailureResponse({
           res,
-          message: [err.message],
-          statusCode: 500,
+          message: err.message,
         });
       } else {
         if (req.file) {
-          const profilePic = req.file.path.replace(/\\/g, '/');
-          req.body.profilePic = profilePic;
+          req.body.profilePic = "/" + req.file.filename;
         }
         next();
       }
@@ -63,16 +56,13 @@ module.exports = {
     }).single("media");
     upload(req, res, (err) => {
       if (err) {
-        console.error(err);
         sendFailureResponse({
           res,
-          message: [error.message],
-          statusCode: 500,
+          message: err.message,
         });
       } else {
         if (req.file) {
-          const media = req.file.path.replace(/\\/g, '/');
-          req.body.media = media;
+          req.body.media = "/" + req.file.filename;
         }
         next();
       }

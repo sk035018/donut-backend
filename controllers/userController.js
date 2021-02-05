@@ -1,13 +1,18 @@
 const {
-  updateDPService,
   loginUserService,
   signUpUserService,
+  searchUserService,
+  userProfileService,
   destroyUserService,
+  loginGoogleService,
   updateProfileService,
+  resetPasswordService,
+  forgotPasswordService,
   updatePasswordService,
-} = require("../services/userService");
+} = require("../services");
 
-const { sendFailureResponse, response, generatePassword } = require("../utils");
+const { sendFailureResponse, response } = require("../utils");
+const verify = require("../Auth");
 
 module.exports = {
   signUpUser: async ({ body }, res) => {
@@ -15,11 +20,9 @@ module.exports = {
       const responseData = await signUpUserService(body);
       response({ res, ...responseData });
     } catch (err) {
-      console.error(err);
       sendFailureResponse({
         res,
-        message: [err.message],
-        statusCode: 500,
+        message: err.message,
       });
     }
   },
@@ -29,11 +32,53 @@ module.exports = {
       const responseData = await loginUserService(req.body);
       response({ res, ...responseData });
     } catch (err) {
-      console.error(err);
+      console.log(err);
       sendFailureResponse({
         res,
-        message: [error.message],
-        statusCode: 500,
+        message: err.message,
+      });
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const responseData = await forgotPasswordService(req.body.email);
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
+      });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const responseData = await resetPasswordService(
+        req.user.id,
+        req.body.newPassword
+      );
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
+      });
+    }
+  },
+
+  loginGoogle: async (req, res) => {
+    try {
+      const payload = await verify(req.body.token);
+      const responseData = await loginGoogleService(
+        payload,
+        req.body.expiresIn
+      );
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
       });
     }
   },
@@ -44,47 +89,30 @@ module.exports = {
 
   updateDP: async (req, res) => {
     try {
-      const responseData = await updateDPService(req.user.id, req.body.profilePic);
+      const responseData = await updateDPService(
+        req.user.id,
+        req.body.profilePic
+      );
       response({ res, ...responseData });
     } catch (err) {
-      console.error(err);
       sendFailureResponse({
         res,
-        message: [error.message],
-        statusCode: 500,
+        message: err.message,
       });
     }
   },
 
   destroyUser: async (req, res) => {
     try {
-      const responseData = await destroyUserService(req.user.id, req.body.password);
+      const responseData = await destroyUserService(
+        req.user.id,
+        req.body.password
+      );
       response({ res, ...responseData });
     } catch (err) {
-      console.error(err);
       sendFailureResponse({
         res,
-        message: [error.message],
-        statusCode: 500,
-      });
-    }
-  },
-
-  googleSignUp: async (req, res, next) => {
-    try {
-      const { email } = req.body;
-      req.body = {
-        ...req.body,
-        userName: email.substring(0, email.indexOf('@')),
-        password: generatePassword(),
-      }
-      next();
-    } catch(error) {
-      console.log(error);
-      sendFailureResponse({
-        res,
-        message: [error.message],
-        statusCode: 500,
+        message: err.message,
       });
     }
   },
@@ -92,13 +120,11 @@ module.exports = {
   updateProfile: async (req, res) => {
     try {
       const responseData = await updateProfileService(req.user.id, req.body);
-      response({ res, ...responseData});
-    } catch(error) {
-      console.log(error);
+      response({ res, ...responseData });
+    } catch (err) {
       sendFailureResponse({
         res,
-        message: [error.message],
-        statusCode: 500,
+        message: err.message,
       });
     }
   },
@@ -107,12 +133,37 @@ module.exports = {
     try {
       const responseData = await updatePasswordService(req.user.id, req.body);
       response({ res, ...responseData });
-    } catch(error) {
-      console.log(error);
+    } catch (err) {
       sendFailureResponse({
         res,
-        message: [error.message],
-        statusCode: 500,
+        message: err.message,
+      });
+    }
+  },
+
+  searchUser: async (req, res) => {
+    try {
+      const responseData = await searchUserService(
+        req.user.id,
+        req.params.name
+      );
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
+      });
+    }
+  },
+
+  userProfile: async (req, res) => {
+    try {
+      const responseData = await userProfileService(req.params.id);
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
       });
     }
   },

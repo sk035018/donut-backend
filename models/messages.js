@@ -1,25 +1,28 @@
-module.exports = (sequelize, DataTypes) => {
+module.exports = function (sequelize, DataTypes) {
   return sequelize.define(
-    "comments",
+    "messages",
     {
-      userId: {
+      sender: {
         allowNull: false,
         type: DataTypes.INTEGER,
       },
 
-      postId: {
+      reciever: {
         allowNull: false,
         type: DataTypes.INTEGER,
       },
 
-      text: {
+      message: {
         allowNull: false,
         type: DataTypes.STRING,
       },
 
-      media: DataTypes.STRING,
+      delivered: {
+        defaultValue: true,
+        type: DataTypes.BOOLEAN,
+      },
 
-      totalLikes: {
+      showTo: {
         defaultValue: 0,
         type: DataTypes.INTEGER,
       },
@@ -28,8 +31,6 @@ module.exports = (sequelize, DataTypes) => {
     {
       timestamps: true,
       createdAt: "created_at",
-      updatedAt: "updated_at",
-      deletedAt: false,
       underscored: true,
     }
   );

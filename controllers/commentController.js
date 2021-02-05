@@ -2,6 +2,7 @@ const {
   updateCommentService,
   addCommentService,
   destroyCommentService,
+  postCommentsService,
 } = require("../services");
 
 const { sendFailureResponse, response } = require("../utils");
@@ -12,11 +13,9 @@ module.exports = {
       const responseData = await addCommentService(req.user.id, req.body);
       response({ res, ...responseData });
     } catch (err) {
-      console.log(err);
       sendFailureResponse({
         res,
-        message: [err.message],
-        statusCode: 500,
+        message: err.message,
       });
     }
   },
@@ -29,25 +28,36 @@ module.exports = {
       );
       response({ res, ...responseData });
     } catch (err) {
-      console.log(err);
       sendFailureResponse({
-        statusCode: 500,
-        message: [err.message],
         res,
+        message: err.message,
       });
     }
   },
 
   updateComment: async (req, res) => {
     try {
-      const responseData = await updateCommentService(req.body);
+      const responseData = await updateCommentService(req.user.id, req.body);
       response({ res, ...responseData });
     } catch (err) {
-      console.log(err);
       sendFailureResponse({
         res,
-        message: [err.message],
-        statusCode: 500,
+        message: err.message,
+      });
+    }
+  },
+
+  postComments: async (req, res) => {
+    try {
+      const responseData = await postCommentsService(
+        req.user.id,
+        req.params.id
+      );
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
       });
     }
   },

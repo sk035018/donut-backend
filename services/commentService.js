@@ -1,57 +1,142 @@
-const { comments } = require("../models");
+const {
+  Comments,
+  Posts,
+  transaction,
+  Likes,
+  Notifications,
+  Sequelize,
+} = require("../models");
+const { stringifyMe } = require("../utils");
+const { likeCheck } = require("./utils");
+
+const destroySingleComment = async (comment, transaction) => {
+  if (comment.media) {
+    await deleteFile(process.env.COMMENTS_FILE_PATH + comment.media);
+  }
+
+  await Likes.destroy(
+    {
+      where: { typeId: comment.id, likeType: "COMMENT" },
+    },
+    { transaction }
+  );
+
+  await Notifications.destroy({
+    where: Sequelize.or(
+      { postId: comment.postId, type: "COMMENT" },
+      { postId: comment.postId, type: "LIKECOMMENT" }
+    ),
+  });
+  await comment.destroy({ transaction });
+};
 
 module.exports = {
-  addCommentService: async (userId, { postId, message }) => {
+  addCommentService: async (userId, { postId, text }) => {
     try {
-      const comment = await comments.create({ userId, postId, message });
-      return {
-        statusCode: 201,
-        name: "comment",
-        value: comment,
-        message: "Comment Created.",
-      };
+      const post = await Posts.findOne({ where: { id: postId } });
+      if (!post) {
+        return {
+          statusCode: 404,
+          message: "No Such Post Found !!!",
+        };
+      }
+
+      return await transaction(async (transaction) => {
+        try {
+          await Comments.create({ userId, postId, text }, { transaction });
+          ++post.totalComments;
+          await post.save({ transaction });
+          return {
+            statusCode: 201,
+            message: "Comment Created.",
+          };
+        } catch (err) {
+          throw err;
+        }
+      });
     } catch (err) {
-      console.log(err);
       throw err;
     }
   },
 
   destroyCommentService: async (userId, id) => {
     try {
-      const comment = await comments.findOne({ where: { id } });
-      if (comment.userId === userId) {
-        await comment.destroy();
+      const comment = await Comments.findOne({ where: { id } });
+      if (!comment) {
+        return {
+          statusCode: 404,
+          message: "Comment not Found !!!",
+        };
+      }
+
+      if (comment.userId !== userId) {
+        return {
+          statusCode: 401,
+          message: "This Comment doesn't belongs to You !!!",
+        };
+      }
+      return await transaction(async (transaction) => {
+        await Posts.decrement(
+          { total_comments: 1 },
+          { where: { id: comment.postId } },
+          { transaction }
+        );
+
+        await destroySingleComment(comment, transaction);
 
         return {
-          statusCode: 202,
-          message: "Comment Deleted.",
+          statusCode: 200,
+          message: "Comment Deleted !!!",
         };
-      } else {
-        throw new Error("This comment doesn't belongs to you.");
-      }
+      });
     } catch (err) {
       throw err;
     }
   },
 
-  updateCommentService: async function ({ id, message }) {
+  updateCommentService: async (userId, { id, text }) => {
     try {
-      const comment = await comments.findOne({ where: { id } });
-      if (comment.userId === userId) {
-        comment.message = message;
-        await comment.save();
-
+      const comment = await Comments.update(
+        { text },
+        { where: { id, userId } }
+      );
+      if (!comment) {
         return {
-          statusCode: 202,
-          message: "comment Updated.",
-          name: "comment",
-          value: comment,
+          statusCode: 404,
+          message:
+            "Either User is not valid or Comment does not exist anymore.",
         };
-      } else {
-        throw new Error("This comment doesn't belongs to you.");
       }
+
+      return {
+        statusCode: 200,
+        message: "Comment Updated.",
+      };
     } catch (err) {
       throw err;
     }
   },
+
+  postCommentsService: async (userId, postId) => {
+    try {
+      const _postComments = await Comments.findAll({
+        where: { postId },
+        order: [["created_at", "DESC"]],
+      });
+      const postComments = await likeCheck(
+        stringifyMe(_postComments),
+        "COMMENT",
+        userId
+      );
+      return {
+        statusCode: 200,
+        name: "comments",
+        value: postComments,
+      };
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  destroySingleComment,
 };

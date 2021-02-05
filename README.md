@@ -24,8 +24,8 @@
         ===> userService
     
 #    uploads/
-        ===> posts/ ## All the post media saves in this folder
-        ===> profile/ ## All the profile pictures of users will save in this folder
+        ===> Posts/ ## All the post media saves in this folder
+        ===> profile/ ## All the profile pictures of Users will save in this folder
     
 #    utils/
         ===> index.js ## All the utility functions are defined in this file

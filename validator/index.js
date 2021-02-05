@@ -12,11 +12,14 @@ const { sendFailureResponse } = require("../utils");
 const signUpValidation = [
   ...validateNotEmpty(["fullName", "userName", "email", "password"]),
 
+  body("userName")
+    .isLength({ min: 3 })
+    .withMessage("userName should be atleast of 3 characters."),
   body("userName").custom(async (userName) => {
     const existingUser = await checkExisting(null, userName);
     if (existingUser) throw new Error("UserName not available");
-    else if (userName.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/))
-      throw new Error("Username Cannot have special character");
+    else if (userName.match(/[A-Z!@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/))
+      throw new Error("Username Cannot have special character or UpperCase");
     else return true;
   }),
 
@@ -45,9 +48,7 @@ const profileUpdateValidations = [
 const updatePasswordValidations = [...passwordValidations("newPassword")];
 
 const result = (req, res, next) => {
-  const errors = validationResult(req).formatWith(
-    ({ msg }) => `Error ==> ${msg}`
-  );
+  const errors = validationResult(req).formatWith(({ msg }) => msg);
 
   if (!errors.isEmpty()) {
     sendFailureResponse({
@@ -60,7 +61,7 @@ const result = (req, res, next) => {
 };
 
 const commentValidations = [
-  body('message').notEmpty().withMessage('comment can not be empty.')
+  body("text").notEmpty().withMessage("Comment can't be Empty."),
 ];
 
 module.exports = {

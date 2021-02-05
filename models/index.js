@@ -1,7 +1,4 @@
 const { Sequelize } = require("sequelize");
-const { fs } = require("../utils");
-
-const db = {};
 
 const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
 
@@ -10,20 +7,28 @@ const sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
   port: DB_PORT,
   dialect: "postgres",
   sync: true,
+  logging: false,
   pool: {
     max: 5,
     min: 0,
     acquire: 30000,
     idle: 10000,
-    logging: true,
   },
 });
 
 // Creating Models
-db.users = require('./users')(sequelize, Sequelize.DataTypes);
-db.posts = require('./posts')(sequelize, Sequelize.DataTypes);
-db.likes = require('./likes')(sequelize, Sequelize.DataTypes);
-db.comments = require('./comments')(sequelize, Sequelize.DataTypes);
+const db = {
+  Sequelize,
+  Users: require("./users")(sequelize, Sequelize.DataTypes),
+  Posts: require("./posts")(sequelize, Sequelize.DataTypes),
+  Likes: require("./likes")(sequelize, Sequelize.DataTypes),
+  Friends: require("./friends")(sequelize, Sequelize.DataTypes),
+  Comments: require("./comments")(sequelize, Sequelize.DataTypes),
+  Messages: require("./messages")(sequelize, Sequelize.DataTypes),
+  Notifications: require("./notifications")(sequelize, Sequelize.DataTypes),
+  SharedPosts: require("./sharedPosts")(sequelize, Sequelize.DataTypes),
+  transaction: (cb) => sequelize.transaction(cb),
+};
 
 (async () => {
   try {
@@ -31,17 +36,12 @@ db.comments = require('./comments')(sequelize, Sequelize.DataTypes);
     await sequelize.sync();
     console.log("Database connnection established successfully");
   } catch (error) {
-    console.log(error, ">err in index model.");
+    console.log("Model Error", error);
   }
 })();
 
-// Providing Associations to models
-db.posts.belongsTo(db.users, { foreignKey: 'userId' });
-
-db.sequelize = sequelize;
-
-db.transaction = (cb) => {
-  return sequelize.transaction(cb);
-}
+// Associations
+db.Users.hasMany(db.Posts, { foreignKey: "userId" });
+db.Friends.belongsTo(db.Users, { foreignKey: "user1" });
 
 module.exports = db;

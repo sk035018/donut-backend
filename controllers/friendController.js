@@ -1,18 +1,22 @@
 const {
-  newPostService,
-  destroyPostService,
-  myPostsService,
-  allPostsService,
-  friendsPostsService,
-  editPostService,
-  getPostService,
+  sendFrndReqService,
+  acceptFrndReqService,
+  rejectFrndReqService,
+  pendingFrndReqService,
+  myFriendsService,
+  unfriendService,
+  friendSuggestionService,
 } = require("../services");
+
 const { sendFailureResponse, response } = require("../utils");
 
 module.exports = {
-  allPosts: async (_, res) => {
+  sendFrndReq: async (req, res) => {
     try {
-      const responseData = await allPostsService();
+      const responseData = await sendFrndReqService(
+        req.user.id,
+        +req.params.id
+      );
       response({ res, ...responseData });
     } catch (err) {
       sendFailureResponse({
@@ -22,9 +26,12 @@ module.exports = {
     }
   },
 
-  myPosts: async (req, res) => {
+  acceptFrndReq: async (req, res) => {
     try {
-      const responseData = await myPostsService(req.user.id);
+      const responseData = await acceptFrndReqService(
+        req.params.id,
+        req.user.id
+      );
       response({ res, ...responseData });
     } catch (err) {
       sendFailureResponse({
@@ -34,9 +41,12 @@ module.exports = {
     }
   },
 
-  newPost: async (req, res) => {
+  rejectFrndReq: async (req, res) => {
     try {
-      const responseData = await newPostService(req.user.id, req.body);
+      const responseData = await rejectFrndReqService(
+        req.user.id,
+        req.params.id
+      );
       response({ res, ...responseData });
     } catch (err) {
       sendFailureResponse({
@@ -46,9 +56,21 @@ module.exports = {
     }
   },
 
-  destroyPost: async (req, res) => {
+  pendingFrndReq: async (req, res) => {
     try {
-      const responseData = await destroyPostService(req.user.id, req.params.id);
+      const responseData = await pendingFrndReqService(req.user.id);
+      response({ res, ...responseData });
+    } catch (err) {
+      sendFailureResponse({
+        res,
+        message: err.message,
+      });
+    }
+  },
+
+  myFriends: async (req, res) => {
+    try {
+      const responseData = await myFriendsService(req.user.id);
       response({ res, ...responseData });
     } catch (err) {
       console.log(err);
@@ -59,9 +81,9 @@ module.exports = {
     }
   },
 
-  friendsPosts: async (req, res) => {
+  unfriend: async (req, res) => {
     try {
-      const responseData = await friendsPostsService(req.user.id);
+      const responseData = await unfriendService(req.user.id, req.params.id);
       response({ res, ...responseData });
     } catch (err) {
       sendFailureResponse({
@@ -71,40 +93,14 @@ module.exports = {
     }
   },
 
-  userPosts: async (req, res) => {
+  friendSuggestion: async (req, res) => {
     try {
-      const responseData = await myPostsService(req.params.id);
+      const responseData = await friendSuggestionService(req.user.id);
       response({ res, ...responseData });
     } catch (err) {
       sendFailureResponse({
         res,
         message: err.message,
-      });
-    }
-  },
-
-  editPost: async (req, res) => {
-    try {
-      const responseData = await editPostService(req.user.id, req.body);
-      response({ res, ...responseData });
-    } catch (err) {
-      console.log(err);
-      sendFailureResponse({
-        res,
-        message: err.message,
-      });
-    }
-  },
-
-  getPost: async (req, res) => {
-    try {
-      const responseData = await getPostService(req.user.id, req.params.postId);
-      response({ res, ...responseData });
-    } catch (err) {
-      console.log(err);
-      sendFailureResponse({
-        res,
-        messsage: err.message,
       });
     }
   },
